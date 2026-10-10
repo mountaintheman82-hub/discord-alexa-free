@@ -1,0 +1,16 @@
+{
+  "name": "discord-alexa-realtime-listener",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Near-real-time Discord-to-Alexa Notify Me listener",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "discord.js": "^14.21.0"
+  }
+}
