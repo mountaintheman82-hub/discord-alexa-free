@@ -33,7 +33,7 @@ client.on(Events.MessageCreate, async message => {
   const body = (message.content || (message.attachments.size ? '[attachment]' : '[non-text message]'))
     .replace(/\s+/g, ' ')
     .trim()
-    .slice(0, 900);
+    .slice(0, 1800);
 
   try {
     const response = await fetch('https://api.notifymyecho.com/v1/NotifyMe', {
