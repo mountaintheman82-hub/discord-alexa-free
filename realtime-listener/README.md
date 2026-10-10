@@ -1,6 +1,6 @@
 # Real-time Discord → Alexa listener
 
-This optional service uses the Discord Gateway to react to new messages in one configured text channel, then sends the message text to the Alexa Notify Me API. It is separate from the existing five-minute GitHub Actions poller. The existing workflow is left intact.
+This optional service uses the Discord Gateway to react to new messages in one configured text channel, then sends the message text to the Alexa Notify Me API. It is separate from the existing five-minute GitHub Actions poller. The existing workflow is left intact in this branch. Do not run the listener and the scheduled poller for the same channel at the same time: their cursors are independent and the same message could trigger two notifications. After confirming the listener works, disable the poller's schedule trigger in `.github/workflows/discord-alexa.yml` but keep manual `workflow_dispatch` available. To return to polling, stop the listener and re-enable the schedule.
 
 ## Important privacy behavior
 
