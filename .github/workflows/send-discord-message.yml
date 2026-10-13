@@ -1,0 +1,63 @@
+name: Send Discord Message
+
+on:
+  workflow_dispatch:
+    inputs:
+      message:
+        description: "Message to post in the configured Discord channel (max 2000 characters)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  send-message:
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - name: Validate and send message
+        env:
+          DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+          DISCORD_CHANNEL_ID: ${{ secrets.DISCORD_CHANNEL_ID }}
+          MESSAGE: ${{ inputs.message }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ -z "${DISCORD_TOKEN:-}" || -z "${DISCORD_CHANNEL_ID:-}" ]]; then
+            echo "Missing DISCORD_TOKEN or DISCORD_CHANNEL_ID repository secret."
+            exit 1
+          fi
+
+          if [[ ! "$DISCORD_CHANNEL_ID" =~ ^[0-9]+$ ]]; then
+            echo "DISCORD_CHANNEL_ID must contain only digits."
+            exit 1
+          fi
+
+          if [[ -z "${MESSAGE//[[:space:]]/}" ]]; then
+            echo "Enter a non-empty message."
+            exit 1
+          fi
+
+          # Discord messages have a 2,000-character content limit.
+          MESSAGE="${MESSAGE:0:2000}"
+
+          payload="$(jq -n --arg content "$MESSAGE" '{content: $content, allowed_mentions: {parse: []}}')"
+          response_file="$(mktemp)"
+          trap 'rm -f "$response_file"' EXIT
+
+          status="$(curl --silent --show-error --max-time 15 \
+            --output "$response_file" --write-out '%{http_code}' \
+            --request POST \
+            "https://discord.com/api/v10/channels/${DISCORD_CHANNEL_ID}/messages" \
+            --header "Authorization: Bot ${DISCORD_TOKEN}" \
+            --header "Content-Type: application/json" \
+            --data "$payload")"
+
+          if [[ "$status" -lt 200 || "$status" -ge 300 ]]; then
+            echo "Discord rejected the message (HTTP $status). Check that the bot is in the server and has View Channel and Send Messages permissions."
+            exit 1
+          fi
+
+          echo "Message successfully sent to the configured Discord channel."
